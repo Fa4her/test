@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>リアルタイム位置情報観測</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+  <div id="map" style="height: 600px;"></div>
+  <script>
+    // 地図の初期設定
+    const map = L.map('map').setView([35.681236, 139.767125], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+    }).addTo(map);
+
+    // マーカーを保持するオブジェクト
+    const markers = {};
+
+    // WebSocketの接続
+    const socket = new WebSocket('ws://localhost:8080');
+
+    // メッセージを受信したときの処理
+    socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      data.locations.forEach(location => {
+        const id = location.id;
+        const latLng = [location.latitude, location.longitude];
+
+        if (markers[id]) {
+          markers[id].setLatLng(latLng);
+        } else {
+          markers[id] = L.marker(latLng).addTo(map);
+        }
+      });
+    };
+  </script>
+</body>
+</html>
